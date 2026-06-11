@@ -1,0 +1,12 @@
+{
+  "name": "task-app-frontend",
+  "version": "1.0.0",
+  "description": "Task management app frontend",
+  "main": "index.js",
+  "scripts": {
+    "start": "npx http-server -p 3000 -c-1"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}
