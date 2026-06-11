@@ -17,10 +17,10 @@ const pool = new Pool({
 app.get('/health', (req, res) => res.json({ status: 'OK' }));
 
 // 最小: 一覧取得
-    app.get('/api/{vtubers}', async (req, res) => {
+    app.get('/api/vtubers', async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT * FROM {vtubers}'
+      'SELECT * FROM vtubers'
     );
     res.json(result.rows);
   } catch (error) {

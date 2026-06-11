@@ -12,7 +12,7 @@ async function loadTableJson() {
   pre.textContent = '読み込み中...';
 
   try {
-    const response = await fetch(`${API_URL}/{vtubers}`);
+    const response = await fetch(`${API_URL}/vtubers`);
     const tableData = await response.json();
     pre.textContent = JSON.stringify(tableData, null, 2);
   } catch (error) {

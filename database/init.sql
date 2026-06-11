@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS vtubers (
     vtuber_id INTEGER PRIMARY KEY,
     name VARCHAR(63) NOT NULL,
-    gender ENUM('男', '女', 'その他', '定義不能') NOT NULL,
+    gender CHAR(4) NOT NULL CHECK (gender IN ('女','男', 'その他', '定義不能')) NOT NULL,
     group_name VARCHAR(63),
     birthday DATE,
     color_code VARCHAR(8),
@@ -25,5 +25,5 @@ CREATE TABLE IF NOT EXISTS vtuber_links (
 
 CREATE TABLE IF NOT EXISTS user_favorites (
     user_id INTEGER NOT NULL,
-    vtuber_id INTEGER NOT NULL,
+    vtuber_id INTEGER NOT NULL
 );

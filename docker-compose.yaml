@@ -45,7 +45,7 @@ services:
     networks:
       - app-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user -d task_db"]
+      test: ["CMD-SHELL", "pg_isready -U user -d postgres_tutorial"]
       interval: 10s
       timeout: 5s
       retries: 5
