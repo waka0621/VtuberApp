@@ -11,6 +11,26 @@
   </div>
   <pre id="tableJson" style="white-space: pre-wrap; background:#f6f6f6; padding:8px;">読み込み待ち...</pre>
 
+  <form id="vtuberForm">
+    <input id="vtuberName" type="text" placeholder="name (必須)" required>
+    
+    <select id="vtuberGender" required>
+      <option value="" disabled selected>性別を選択 (必須)</option>
+      <option value="女">女</option>
+      <option value="男">男</option>
+      <option value="その他">その他</option>
+      <option value="定義不能">定義不能</option>
+    </select>
+
+    <input id="vtuberGroupName" type="text" placeholder="group_name (任意)">
+    <input id="vtuberBirthday" type="date" placeholder="birthday (任意)">
+    <input id="vtuberColorCode" type="text" placeholder="color_code (任意) 例:#FF0000">
+    <textarea id="vtuberNotes" placeholder="notes (任意)"></textarea>
+
+    <button type="submit">追加</button>
+  </form>
+
+
   <script src="app.js"></script>
 </body>
 </html>
