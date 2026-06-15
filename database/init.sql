@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS vtubers (
-    vtuber_id INTEGER PRIMARY KEY,
+    vtuber_id SERIAL PRIMARY KEY,
     name VARCHAR(63) NOT NULL,
     gender CHAR(4) NOT NULL CHECK (gender IN ('女','男', 'その他', '定義不能')) NOT NULL,
     group_name VARCHAR(63),
