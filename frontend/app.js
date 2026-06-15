@@ -10,11 +10,6 @@ document.addEventListener('DOMContentLoaded', () => {
   loadTableJson();
 });
 
-async function loadTableJson() {
-  const pre = document.getElementById('tableJson');
-  if (!pre) return;
-  pre.textContent = '読み込み中...';
-
 async function insertVtuber(event) {
   event.preventDefault();
 
@@ -55,6 +50,11 @@ async function insertVtuber(event) {
     pre.textContent = `エラー: ${error.message}`;
   }
 }
+
+async function loadTableJson() {
+  const pre = document.getElementById('tableJson');
+  if (!pre) return;
+  pre.textContent = '読み込み中...';
 
   try {
     const response = await fetch(`${API_URL}/vtubers`);
