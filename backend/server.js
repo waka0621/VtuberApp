@@ -53,6 +53,24 @@ app.post('/api/vtubers', async (req, res) => {
   }
 });
 
+ //{table名} の特定 id を削除（table内id} を使用）
+app.delete('/api/vtubers/:id', async (req, res) => {
+  const id = req.params.id;
+  try {
+    const result = await pool.query(
+      'DELETE FROM vtubers WHERE vtuber_id = $1 RETURNING *',
+      [id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+
+    res.json({ deleted: result.rows[0] });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete' });
+  }
+});
 
 // シンプルなエラーハンドラ
 app.use((err, req, res, next) => {
