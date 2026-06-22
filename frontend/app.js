@@ -20,7 +20,6 @@ async function insertVtuber(event) {
   const pre = document.getElementById('tableJson');
   if (!pre) return;
 
-  // 各入力項目の値を取得
   const name = document.getElementById('vtuberName').value;
   const gender = document.getElementById('vtuberGender').value;
   const groupName = document.getElementById('vtuberGroupName').value;
@@ -29,54 +28,70 @@ async function insertVtuber(event) {
   const notes = document.getElementById('vtuberNotes').value;
 
   pre.textContent = '送信中...';
+
+  try {
+    const response = await fetch(`${API_URL}/vtubers`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name,
+        gender,
+        group_name: groupName,
+        birthday,
+        color_code: colorCode,
+        notes
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`登録に失敗しました: ${response.status}`);
+    }
+
+    await loadTableJson();
+  } catch (error) {
+    console.error(error);
+    pre.textContent = `エラー: ${error.message}`;
+  }
 }
 
 async function deleteData(event) {
   event.preventDefault();
 
-  console.log("削除ボタンが押されました");
+  const pre = document.getElementById('tableJson');
+  if (!pre) return;
 
-  // ここに削除処理を書く
-}
+  const vtuberId = document.getElementById('deleteVtuberId').value.trim();
+  if (!vtuberId) {
+    pre.textContent = '削除する vtuber_id を入力してください。';
+    return;
+  }
 
-const vtuber_id = 1;
+  pre.textContent = `vtuber_id=${vtuberId} を削除中...`;
 
   try {
-    const response = await fetch(`${API_URL}/vtubers/${vtuber_id}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ 
-        name, 
-        gender, 
-        group_name: groupName, 
-        birthday, 
-        color_code: colorCode, 
-        notes 
-      })
+    const response = await fetch(`${API_URL}/vtubers/${encodeURIComponent(vtuberId)}`, {
+      method: 'DELETE'
     });
-  } catch (error) {
-    console.error(error);
-  }
-}
 
-    try {
-    const response = await fetch(`${API_URL}/vtubers/${vtuber_id}`, {
-      method: 'DELITE',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
+    if (response.status === 404) {
+      pre.textContent = `vtuber_id=${vtuberId} は見つかりませんでした。`;
+      return;
+    }
+
+    if (!response.ok) {
+      throw new Error(`削除に失敗しました: ${response.status}`);
+    }
 
     const data = await response.json();
-    pre.textContent = JSON.stringify(data, null, 2);
-
+    pre.textContent = `削除しました: ${JSON.stringify(data.deleted, null, 2)}`;
     await loadTableJson();
   } catch (error) {
+    console.error(error);
     pre.textContent = `エラー: ${error.message}`;
   }
-
+}
 
 async function loadTableJson() {
   const pre = document.getElementById('tableJson');
