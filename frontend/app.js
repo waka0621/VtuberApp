@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (form) form.addEventListener('submit', insertVtuber);
 
   const deleteLinkBtn = document.getElementById('deleteLinkButton');
-  if (deleteLinkBtn) deleteLinkBtn.addEventListener('click', deleteLink);
+  if (deleteLinkBtn) deleteLinkBtn.addEventListener('click', deleteVtuberLinkData);
 
   loadTableJson();
   loadLinkJson();
@@ -165,10 +165,19 @@ async function loadLinkJson() {
   if (!pre) return;
   pre.textContent = 'リンク一覧を読み込み中...';
 
-async function deleteVtuberData(event) {
+    try {
+    const response = await fetch(`${API_URL}/vtuber_links`);
+    const linkData = await response.json();
+    pre.textContent = JSON.stringify(linkData, null, 2);
+  } catch (error) {
+    pre.textContent = `エラー: ${error.message}`;
+  }
+}
+
+async function deleteVtuberLinkData(event) {
   event.preventDefault();
 
-  const pre = document.getElementById('tableJson');
+  const pre = document.getElementById('linksJson');
   if (!pre) return;
 
   const linkId = document.getElementById('deleteLinkId').value.trim();
@@ -195,18 +204,9 @@ async function deleteVtuberData(event) {
 
     const data = await response.json();
     pre.textContent = `削除しました: ${JSON.stringify(data.deleted, null, 2)}`;
-    await loadTableJson();
+    await loadLinkJson();
   } catch (error) {
     console.error(error);
-    pre.textContent = `エラー: ${error.message}`;
-  }
-}
-
-  try {
-    const response = await fetch(`${API_URL}/vtuber_links`);
-    const linkData = await response.json();
-    pre.textContent = JSON.stringify(linkData, null, 2);
-  } catch (error) {
     pre.textContent = `エラー: ${error.message}`;
   }
 }
