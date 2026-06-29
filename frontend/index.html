@@ -30,9 +30,22 @@
     <button type="submit">追加</button>
   </form>
 
-  <div style="margin-top: 16px;">
+  <div class="delete-area">
     <input id="deleteVtuberId" type="number" placeholder="削除する vtuber_id を入力" />
     <button id="deleteButton" type="button">削除</button>
+  </div>
+
+  <div class="link-area" style="margin-top:24px; border-top:1px solid #ddd; padding-top:16px;">
+    <h3>SNSリンク</h3>
+    <input id="linkVtuberId" type="number" placeholder="vtuber_id (必須)" />
+    <input id="linkSiteName" type="text" placeholder="site_name (例: Twitter, YouTube)" />
+    <input id="linkUrl" type="url" placeholder="url (任意)" />
+    <textarea id="linkNotes" placeholder="notes (任意)"></textarea>
+    <div style="margin-top:8px;">
+      <button id="addLinkButton" type="button">リンク登録</button>
+      <button id="showLinks" type="button">リンク一覧表示</button>
+    </div>
+    <pre id="linksJson" style="white-space: pre-wrap; background:#f6f6f6; padding:8px; margin-top:12px;">リンク一覧を表示</pre>
   </div>
 
   <script src="app.js"></script>

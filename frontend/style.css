@@ -31,6 +31,10 @@ button {
   cursor: pointer;
 }
 
+.delete-area {
+  margin-top: 16px;
+}
+
 .task-item {
   border: 1px solid #ccc;
   padding: 10px;

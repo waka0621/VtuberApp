@@ -16,8 +16,8 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 CREATE TABLE IF NOT EXISTS vtuber_links (
-    link_id INTEGER PRIMARY KEY,
-    vtuber_id INTEGER NOT NULL,
+    link_id SERIAL PRIMARY KEY,
+    vtuber_id INTEGER NOT NULL REFERENCES vtubers(vtuber_id) ON DELETE CASCADE,
     site_name VARCHAR(63),
     url VARCHAR(255),
     notes TEXT

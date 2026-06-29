@@ -4,14 +4,20 @@ document.addEventListener('DOMContentLoaded', () => {
   const btn = document.getElementById('showJson');
   if (btn) btn.addEventListener('click', loadTableJson);
 
-  //削除するボタン
-  const deletebtn = document.getElementById('deleteButton');
-  if (deletebtn) deletebtn.addEventListener('click', deleteData);
+  const deleteBtn = document.getElementById('deleteButton');
+  if (deleteBtn) deleteBtn.addEventListener('click', deleteData);
+
+  const addLinkBtn = document.getElementById('addLinkButton');
+  if (addLinkBtn) addLinkBtn.addEventListener('click', insertVtuberLink);
+
+  const showLinksBtn = document.getElementById('showLinks');
+  if (showLinksBtn) showLinksBtn.addEventListener('click', loadLinkJson);
 
   const form = document.getElementById('vtuberForm');
   if (form) form.addEventListener('submit', insertVtuber);
 
   loadTableJson();
+  loadLinkJson();
 });
 
 async function insertVtuber(event) {
@@ -50,6 +56,50 @@ async function insertVtuber(event) {
     }
 
     await loadTableJson();
+  } catch (error) {
+    console.error(error);
+    pre.textContent = `エラー: ${error.message}`;
+  }
+}
+
+async function insertVtuberLink(event) {
+  const pre = document.getElementById('linksJson');
+  if (!pre) return;
+
+  const vtuberId = document.getElementById('linkVtuberId').value.trim();
+  const siteName = document.getElementById('linkSiteName').value.trim();
+  const url = document.getElementById('linkUrl').value.trim();
+  const notes = document.getElementById('linkNotes').value.trim();
+
+  if (!vtuberId) {
+    pre.textContent = 'vtuber_idは必須です。';
+    return;
+  }
+
+  pre.textContent = 'リンク登録中...';
+
+  try {
+    const response = await fetch(`${API_URL}/vtuber_links`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        vtuber_id: Number(vtuberId),
+        site_name: siteName || null,
+        url,
+        notes: notes || null
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`登録に失敗しました: ${response.status}`);
+    }
+
+    const data = await response.json();
+    pre.textContent = `リンク登録しました: ${JSON.stringify(data, null, 2)}`;
+    
+    await loadLinkJson();
   } catch (error) {
     console.error(error);
     pre.textContent = `エラー: ${error.message}`;
@@ -102,6 +152,20 @@ async function loadTableJson() {
     const response = await fetch(`${API_URL}/vtubers`);
     const tableData = await response.json();
     pre.textContent = JSON.stringify(tableData, null, 2);
+  } catch (error) {
+    pre.textContent = `エラー: ${error.message}`;
+  }
+}
+
+async function loadLinkJson() {
+  const pre = document.getElementById('linksJson');
+  if (!pre) return;
+  pre.textContent = 'リンク一覧を読み込み中...';
+
+  try {
+    const response = await fetch(`${API_URL}/vtuber_links`);
+    const linkData = await response.json();
+    pre.textContent = JSON.stringify(linkData, null, 2);
   } catch (error) {
     pre.textContent = `エラー: ${error.message}`;
   }

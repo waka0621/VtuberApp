@@ -71,6 +71,49 @@ app.delete('/api/vtubers/:id', async (req, res) => {
     res.status(500).json({ error: 'Failed to delete' });
   }
 });
+// vtuber_linksテーブルの一覧取得
+app.get('/api/vtuber_links', async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM vtuber_links'
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to fetch vtuber links' });
+  }
+});
+
+// vtuber_id に紐付いたリンク一覧を取得
+app.get('/api/vtubers/:id/links', async (req, res) => {
+  const vtuberId = req.params.id;
+  try {
+    const result = await pool.query(
+      'SELECT * FROM vtuber_links WHERE vtuber_id = $1',
+      [vtuberId]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to fetch links for vtuber' });
+  }
+});
+
+// vtuber_links テーブルへ1件追加
+app.post('/api/vtuber_links', async (req, res) => {
+  try {
+    const { vtuber_id, site_name, url, notes } = req.body;
+    console.log(req.body);
+    const result = await pool.query(
+      'INSERT INTO vtuber_links (vtuber_id, site_name, url, notes) VALUES ($1, $2, $3, $4) RETURNING *',
+      [vtuber_id, site_name || null, url || null, notes || null]
+    );
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to insert vtuber link' });
+  }
+});
 
 // シンプルなエラーハンドラ
 app.use((err, req, res, next) => {
