@@ -71,6 +71,7 @@ app.delete('/api/vtubers/:id', async (req, res) => {
     res.status(500).json({ error: 'Failed to delete' });
   }
 });
+
 // vtuber_linksテーブルの一覧取得
 app.get('/api/vtuber_links', async (req, res) => {
   try {
@@ -112,6 +113,25 @@ app.post('/api/vtuber_links', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to insert vtuber link' });
+  }
+});
+
+// vtuber_links テーブルから link_id を使用して1件削除
+app.delete('/api/vtuber_links/:id', async (req, res) => {
+  const id = req.params.id;
+  try {
+    const result = await pool.query(
+      'DELETE FROM vtuber_links WHERE link_id = $1 RETURNING *',
+      [id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+
+    res.json({ deleted: result.rows[0] });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete vtuber link' });
   }
 });
 

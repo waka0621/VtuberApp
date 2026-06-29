@@ -4,8 +4,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const btn = document.getElementById('showJson');
   if (btn) btn.addEventListener('click', loadTableJson);
 
-  const deleteBtn = document.getElementById('deleteButton');
-  if (deleteBtn) deleteBtn.addEventListener('click', deleteData);
+  const deleteVtuberBtn = document.getElementById('deleteVtuberButton');
+  if (deleteVtuberBtn) deleteVtuberBtn.addEventListener('click', deleteVtuberData);
 
   const addLinkBtn = document.getElementById('addLinkButton');
   if (addLinkBtn) addLinkBtn.addEventListener('click', insertVtuberLink);
@@ -15,6 +15,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const form = document.getElementById('vtuberForm');
   if (form) form.addEventListener('submit', insertVtuber);
+
+  const deleteLinkBtn = document.getElementById('deleteLinkButton');
+  if (deleteLinkBtn) deleteLinkBtn.addEventListener('click', deleteLink);
 
   loadTableJson();
   loadLinkJson();
@@ -98,7 +101,7 @@ async function insertVtuberLink(event) {
 
     const data = await response.json();
     pre.textContent = `リンク登録しました: ${JSON.stringify(data, null, 2)}`;
-    
+
     await loadLinkJson();
   } catch (error) {
     console.error(error);
@@ -106,7 +109,7 @@ async function insertVtuberLink(event) {
   }
 }
 
-async function deleteData(event) {
+async function deleteVtuberData(event) {
   event.preventDefault();
 
   const pre = document.getElementById('tableJson');
@@ -161,6 +164,43 @@ async function loadLinkJson() {
   const pre = document.getElementById('linksJson');
   if (!pre) return;
   pre.textContent = 'リンク一覧を読み込み中...';
+
+async function deleteVtuberData(event) {
+  event.preventDefault();
+
+  const pre = document.getElementById('tableJson');
+  if (!pre) return;
+
+  const linkId = document.getElementById('deleteLinkId').value.trim();
+  if (!linkId) {
+    pre.textContent = '削除する link_id を入力してください。';
+    return;
+  }
+
+  pre.textContent = `link_id=${linkId} を削除中...`;
+
+  try {
+    const response = await fetch(`${API_URL}/vtuber_links/${encodeURIComponent(linkId)}`, {
+      method: 'DELETE'
+    });
+
+    if (response.status === 404) {
+      pre.textContent = `link_id=${linkId} は見つかりませんでした。`;
+      return;
+    }
+
+    if (!response.ok) {
+      throw new Error(`削除に失敗しました: ${response.status}`);
+    }
+
+    const data = await response.json();
+    pre.textContent = `削除しました: ${JSON.stringify(data.deleted, null, 2)}`;
+    await loadTableJson();
+  } catch (error) {
+    console.error(error);
+    pre.textContent = `エラー: ${error.message}`;
+  }
+}
 
   try {
     const response = await fetch(`${API_URL}/vtuber_links`);
