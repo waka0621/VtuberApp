@@ -68,6 +68,50 @@ async function insertVtuber(event) {
   }
 }
 
+async function insertVtuberLink(event) {
+  const pre = document.getElementById('linksJson');
+  if (!pre) return;
+
+  const vtuberId = document.getElementById('linkVtuberId').value.trim();
+  const siteName = document.getElementById('linkSiteName').value.trim();
+  const url = document.getElementById('linkUrl').value.trim();
+  const notes = document.getElementById('linkNotes').value.trim();
+
+  if (!vtuberId) {
+    pre.textContent = 'vtuber_idは必須です。';
+    return;
+  }
+
+  pre.textContent = 'リンク登録中...';
+
+  try {
+    const response = await fetch(`${API_URL}/vtuber_links`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        vtuber_id: Number(vtuberId),
+        site_name: siteName || null,
+        url,
+        notes: notes || null
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`登録に失敗しました: ${response.status}`);
+    }
+
+    const data = await response.json();
+    pre.textContent = `リンク登録しました: ${JSON.stringify(data, null, 2)}`;
+
+    await loadLinkJson();
+  } catch (error) {
+    console.error(error);
+    pre.textContent = `エラー: ${error.message}`;
+  }
+}
+
 async function deleteVtuberData(event) {
   event.preventDefault();
 

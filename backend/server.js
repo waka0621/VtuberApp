@@ -135,6 +135,26 @@ app.delete('/api/vtuber_links/:id', async (req, res) => {
   }
 });
 
+//推し登録テーブルの一覧取得
+app.post('/api/favorites', async (req, res) => {
+  const { vtuber_id, user_id } = req.body;
+  if (!req.body || !req.body.vtuber_id) {
+    return res.status(400).json({ error: 'vtuber_id is required'});
+  }
+
+  try {
+    const result = await pool.query(
+      'INSERT INTO favorites (vtuber_id, user_id) VALUES ($1, $2) RETURNING *',
+      [vtuber_id, user_id]
+    );
+    
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to insert favorite' });
+  }
+});
+
 // シンプルなエラーハンドラ
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
