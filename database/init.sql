@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS vtubers (
 );
 
 CREATE TABLE IF NOT EXISTS users (
-    user_id INTEGER PRIMARY KEY,
+    user_id SERIAL PRIMARY KEY,
     nickname VARCHAR(63) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(32) NOT NULL

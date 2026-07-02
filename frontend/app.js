@@ -4,6 +4,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const btn = document.getElementById('showJson');
   if (btn) btn.addEventListener('click', loadTableJson);
 
+  const addUserBtn = document.getElementById('addUserButton');
+  if (addUserBtn) addUserBtn.addEventListener('click', insertUsers);
+
   const deleteVtuberBtn = document.getElementById('deleteVtuberButton');
   if (deleteVtuberBtn) deleteVtuberBtn.addEventListener('click', deleteVtuberData);
 
@@ -26,6 +29,51 @@ document.addEventListener('DOMContentLoaded', () => {
   loadLinkJson();
   loadFavoritesJson();
 });
+
+async function insertUsers(event) {
+  event.preventDefault();
+
+  const pre = document.getElementById('userJson');
+  if (!pre) return;
+
+  const userId = document.getElementById('userId').value.trim();
+  const nickname = document.getElementById('userNickname').value.trim();
+  const email = document.getElementById('userEmail').value.trim();
+  const password = document.getElementById('userPassword').value;
+
+  if (!userId || !nickname || !email || !password) {
+    pre.textContent = '全ての項目を入力してください。';
+    return;
+  }
+
+  pre.textContent = '送信中...';
+
+  try {
+    const response = await fetch(`${API_URL}/users`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        user_id: Number(userId),
+        nickname,
+        email,
+        password
+      })
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`登録に失敗しました: ${response.status} ${text}`);
+    }
+
+    const data = await response.json();
+    pre.textContent = `登録しました: ${JSON.stringify(data, null, 2)}`;
+  } catch (error) {
+    console.error(error);
+    pre.textContent = `エラー: ${error.message}`;
+  }
+}
 
 async function insertVtuber(event) {
   event.preventDefault();

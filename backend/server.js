@@ -16,16 +16,35 @@ const pool = new Pool({
 
 app.get('/health', (req, res) => res.json({ status: 'OK' }));
 
-// 最小: 一覧取得
-    app.get('/api/vtubers', async (req, res) => {
+//users　テーブル設置
+app.get('/api/users', async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT * FROM vtubers'
+      'SELECT * FROM users'
     );
     res.json(result.rows);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Failed to fetch table data' });
+    res.status(500).json({ error: 'Failed to fetch users' });
+  }
+});
+
+//users テーブルへ1件追加
+app.post('/api/users', async (req, res) => {
+  const { user_id, nickname, email, password } = req.body || {};
+  if (!user_id || !nickname || !email || !password) {
+    return res.status(400).json({ error: 'user_id, nickname, email, password はすべて必須です' });
+  }
+
+  try {
+    const result = await pool.query(
+      'INSERT INTO users (user_id, nickname, email, password) VALUES ($1, $2, $3, $4) RETURNING *',
+      [user_id, nickname, email, password]
+    );
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to insert user' });
   }
 });
 
