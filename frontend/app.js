@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   loadTableJson();
   loadLinkJson();
+  loadFavoritesJson();
 });
 
 async function insertVtuber(event) {
@@ -220,35 +221,52 @@ async function insertUserFavorite(event) {
   const pre = document.getElementById('userFavoritesJson');
   if (!pre) return;
 
-  const name = document.getElementById('vtuberName').value;
-  
+  const userId = document.getElementById('favoriteUserId').value.trim();
+  const vtuberId = document.getElementById('favoriteVtuberId').value.trim();
 
+  if (!userId || !vtuberId) {
+    pre.textContent = 'user_id と vtuber_id を入力してください。';
+    return;
+  }
 
   pre.textContent = '送信中...';
 
   try {
-    const response = await fetch(`${API_URL}/vtubers`, {
+    const response = await fetch(`${API_URL}/favorites`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        name,
-        gender,
-        group_name: groupName,
-        birthday,
-        color_code: colorCode,
-        notes
+        user_id: Number(userId),
+        vtuber_id: Number(vtuberId)
       })
     });
 
     if (!response.ok) {
-      throw new Error(`登録に失敗しました: ${response.status}`);
+      const text = await response.text();
+      throw new Error(`登録に失敗しました: ${response.status} ${text}`);
     }
 
-    await loadTableJson();
+    const data = await response.json();
+    pre.textContent = `登録しました: ${JSON.stringify(data, null, 2)}`;
+    await loadFavoritesJson();
   } catch (error) {
     console.error(error);
+    pre.textContent = `エラー: ${error.message}`;
+  }
+}
+
+async function loadFavoritesJson() {
+  const pre = document.getElementById('userFavoritesJson');
+  if (!pre) return;
+  pre.textContent = '読み込み中...';
+
+  try {
+    const response = await fetch(`${API_URL}/favorites`);
+    const data = await response.json();
+    pre.textContent = JSON.stringify(data, null, 2);
+  } catch (error) {
     pre.textContent = `エラー: ${error.message}`;
   }
 }
