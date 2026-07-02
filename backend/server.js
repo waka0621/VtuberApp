@@ -31,15 +31,15 @@ app.get('/api/users', async (req, res) => {
 
 //users テーブルへ1件追加
 app.post('/api/users', async (req, res) => {
-  const { user_id, nickname, email, password } = req.body || {};
-  if (!user_id || !nickname || !email || !password) {
-    return res.status(400).json({ error: 'user_id, nickname, email, password はすべて必須です' });
+  const { nickname, email, password } = req.body || {};
+  if (!nickname || !email || !password) {
+    return res.status(400).json({ error: 'nickname, email, password はすべて必須です' });
   }
 
   try {
     const result = await pool.query(
-      'INSERT INTO users (user_id, nickname, email, password) VALUES ($1, $2, $3, $4) RETURNING *',
-      [user_id, nickname, email, password]
+      'INSERT INTO users (nickname, email, password) VALUES ($1, $2, $3) RETURNING *',
+      [nickname, email, password]
     );
     res.json(result.rows[0]);
   } catch (error) {

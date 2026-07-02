@@ -36,13 +36,12 @@ async function insertUsers(event) {
   const pre = document.getElementById('userJson');
   if (!pre) return;
 
-  const userId = document.getElementById('userId').value.trim();
   const nickname = document.getElementById('userNickname').value.trim();
   const email = document.getElementById('userEmail').value.trim();
   const password = document.getElementById('userPassword').value;
 
-  if (!userId || !nickname || !email || !password) {
-    pre.textContent = '全ての項目を入力してください。';
+  if (!nickname || !email || !password) {
+    pre.textContent = 'nickname, email, password を入力してください。';
     return;
   }
 
@@ -55,7 +54,6 @@ async function insertUsers(event) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        user_id: Number(userId),
         nickname,
         email,
         password
