@@ -48,6 +48,19 @@ app.post('/api/users', async (req, res) => {
   }
 });
 
+// vtubers テーブルの一覧取得
+app.get('/api/vtubers', async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM vtubers ORDER BY vtuber_id'
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to fetch vtubers' });
+  }
+});
+
 // vtubers テーブルへ1件追加（vtuber_idは自動採番）
 app.post('/api/vtubers', async (req, res) => {
   try {

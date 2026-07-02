@@ -6,12 +6,7 @@
   <title>webアプリ</title>
 </head>
 <body>
-  <div>
-    <button id="showJson">JSON 表示</button>
-  </div>
-  <pre id="tableJson" style="white-space: pre-wrap; background:#f6f6f6; padding:8px;">読み込み待ち...</pre>
-
-  <div class="user-area" style="white-space: pre-wrap; background:#f6f6f6; padding:8px;">
+  <div class="user-area" style="width: 100%; background:#f6f6f6; padding:8px;">
     <h3>ユーザー情報</h3>
     <input id="userId" type="number" placeholder="user_id (必須)" />
     <input id="userNickname" type="text" placeholder="nickname (必須)" />
@@ -22,6 +17,12 @@
     </div>
     <pre id="userJson" style="white-space: pre-wrap; background:#f6f6f6; padding:8px; margin-top:12px;">ユーザー登録の結果を表示</pre>
   </div>
+
+
+  <div>
+    <button id="showJson">JSON 表示</button>
+  </div>
+  <pre id="tableJson" style="white-space: pre-wrap; background:#f6f6f6; padding:8px;">読み込み待ち...</pre>
 
   <form id="vtuberForm">
     <input id="vtuberName" type="text" placeholder="name (必須)" required>
