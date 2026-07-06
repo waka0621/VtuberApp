@@ -38,7 +38,7 @@ app.post('/api/users', async (req, res) => {
 
   try {
     const result = await pool.query(
-      'INSERT INTO users (nickname, email, password) VALUES ($1, $2, $3) RETURNING *',
+      'INSERT INTO users (user_id, nickname, email, password) VALUES (DEFAULT, $1, $2, $3) RETURNING user_id, nickname, email, password',
       [nickname, email, password]
     );
     res.json(result.rows[0]);
