@@ -4,8 +4,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>webアプリ</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body class="theme-pop">
+  <div class="theme-selector" role="group" aria-label="デザイン選択">
+    <span>デザイン：</span>
+    <button type="button" data-theme="simple" aria-pressed="false">シンプル</button>
+    <button type="button" data-theme="pop" aria-pressed="true">ポップ</button>
+    <button type="button" data-theme="cool" aria-pressed="false">クール</button>
+    <button type="button" data-theme="cute" aria-pressed="false">キュート</button>
+  </div>
+
   <div class="user-area" style="width: 100%; background:#f6f6f6; padding:8px;">
     <h3>ユーザー情報</h3>
     <input id="userNickname" type="text" placeholder="nickname (必須)" />

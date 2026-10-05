@@ -1,6 +1,21 @@
 const API_URL = 'http://localhost:5000/api';
 
 document.addEventListener('DOMContentLoaded', () => {
+  const themeButtons = document.querySelectorAll('[data-theme]');
+  themeButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const theme = button.dataset.theme;
+      if (!theme) return;
+
+      document.body.classList.remove('theme-simple', 'theme-pop', 'theme-cool', 'theme-cute');
+      document.body.classList.add(`theme-${theme}`);
+
+      themeButtons.forEach((themeButton) => {
+        themeButton.setAttribute('aria-pressed', String(themeButton === button));
+      });
+    });
+  });
+
   const btn = document.getElementById('showJson');
   if (btn) btn.addEventListener('click', loadTableJson);
 

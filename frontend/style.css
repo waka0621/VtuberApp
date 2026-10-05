@@ -18,6 +18,19 @@ body {
     color 0.3s;
 }
 
+.theme-selector {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.theme-selector button[aria-pressed="true"] {
+  outline: 3px solid currentColor;
+  outline-offset: 2px;
+}
+
 /*simpleテーマ*/
 body.theme-simple {
   background-color: #f4f6f8;
