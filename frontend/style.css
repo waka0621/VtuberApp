@@ -104,7 +104,7 @@ button {
   border: none;
   border-radius: 8px;
 
-  background-color: #26313a;
+  background-color: #414243;
   color: #ffffff;
 
   font-family: inherit;
@@ -266,7 +266,7 @@ body.theme-pop {
 }
 
 /* =========================
-   Coolテーマ
+  Coolテーマ
 ========================= */
 
 body.theme-cool {
@@ -317,15 +317,15 @@ body.theme-cool {
 /* ボタン */
 
 .theme-cool button {
-  background-color: #238636;
+  background-color: #282386;
   color: #ffffff;
 
-  border: 1px solid #2ea043;
+  border: 1px solid #282386;
   border-radius: 6px;
 }
 
 .theme-cool button:hover {
-  background-color: #2ea043;
+  background-color: #282386;
 }
 
 /* カード */
