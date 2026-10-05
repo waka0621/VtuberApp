@@ -174,3 +174,256 @@ pre {
 .error-message {
   color: #c73b3b;
 }
+
+/* =========================
+  Popテーマ
+========================= */
+
+body.theme-pop {
+  background-color: #fff8dc;
+  color: #333333;
+}
+
+/* 見出し */
+
+.theme-pop h1 {
+  color: #ff6b6b;
+}
+
+.theme-pop h2 {
+  color: #ff7a59;
+}
+
+/* 入力欄 */
+
+.theme-pop input,
+.theme-pop textarea,
+.theme-pop select {
+  background-color: #ffffff;
+
+  border: 2px solid #ffb347;
+  border-radius: 12px;
+}
+
+.theme-pop input:focus,
+.theme-pop textarea:focus,
+.theme-pop select:focus {
+  outline: none;
+
+  border-color: #ff6b6b;
+
+  box-shadow:
+    0 0 0 3px rgba(255, 107, 107, 0.15);
+}
+
+/* ボタン */
+
+.theme-pop button {
+  background-color: #ff6b6b;
+  color: #ffffff;
+
+  border: none;
+  border-radius: 20px;
+
+  font-weight: bold;
+}
+
+.theme-pop button:hover {
+  background-color: #ff5252;
+}
+
+/* カード */
+
+.theme-pop .task-item {
+  background-color: #ffffff;
+
+  border: 2px solid #ffd166;
+  border-radius: 16px;
+
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+/* JSON表示 */
+
+.theme-pop pre {
+  background-color: #ffffff;
+
+  border: 2px solid #ffd166;
+  border-radius: 16px;
+}
+
+/* =========================
+   Coolテーマ
+========================= */
+
+body.theme-cool {
+  background-color: #161b22;
+  color: #e6edf3;
+}
+
+/* 見出し */
+
+.theme-cool h1 {
+  color: #ffffff;
+}
+
+.theme-cool h2 {
+  color: #79c0ff;
+}
+
+/* 入力欄 */
+
+.theme-cool input,
+.theme-cool textarea,
+.theme-cool select {
+  background-color: #21262d;
+  color: #ffffff;
+
+  border: 1px solid #30363d;
+  border-radius: 6px;
+}
+
+.theme-cool input:focus,
+.theme-cool textarea:focus,
+.theme-cool select:focus {
+  outline: none;
+
+  border-color: #58a6ff;
+
+  box-shadow:
+    0 0 0 3px rgba(88, 166, 255, 0.15);
+}
+
+/* placeholder */
+
+.theme-cool input::placeholder,
+.theme-cool textarea::placeholder {
+  color: #8b949e;
+}
+
+/* ボタン */
+
+.theme-cool button {
+  background-color: #238636;
+  color: #ffffff;
+
+  border: 1px solid #2ea043;
+  border-radius: 6px;
+}
+
+.theme-cool button:hover {
+  background-color: #2ea043;
+}
+
+/* カード */
+
+.theme-cool .task-item {
+  background-color: #21262d;
+
+  border: 1px solid #30363d;
+  border-radius: 8px;
+
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+}
+
+/* JSON表示 */
+
+.theme-cool pre {
+  background-color: #0d1117;
+  color: #c9d1d9;
+
+  border: 1px solid #30363d;
+  border-radius: 8px;
+}
+
+/* 補足文字 */
+
+.theme-cool .task-time,
+.theme-cool .task-note,
+.theme-cool .task-date {
+  color: #8b949e;
+}
+
+/* =========================
+   Cuteテーマ
+========================= */
+
+body.theme-cute {
+  background-color: #fff5f8;
+  color: #57464c;
+}
+
+/* 見出し */
+
+.theme-cute h1 {
+  color: #d96c8a;
+}
+
+.theme-cute h2 {
+  color: #c85c7a;
+}
+
+/* 入力欄 */
+
+.theme-cute input,
+.theme-cute textarea,
+.theme-cute select {
+  background-color: #ffffff;
+
+  border: 1px solid #f1c6d2;
+  border-radius: 12px;
+}
+
+.theme-cute input:focus,
+.theme-cute textarea:focus,
+.theme-cute select:focus {
+  outline: none;
+
+  border-color: #e99ab0;
+
+  box-shadow:
+    0 0 0 3px rgba(233, 154, 176, 0.15);
+}
+
+/* ボタン */
+
+.theme-cute button {
+  background-color: #e99ab0;
+  color: #ffffff;
+
+  border: none;
+  border-radius: 18px;
+}
+
+.theme-cute button:hover {
+  background-color: #df819d;
+}
+
+/* カード */
+
+.theme-cute .task-item {
+  background-color: #ffffff;
+
+  border: 1px solid #f5d7df;
+  border-radius: 18px;
+
+  box-shadow:
+    0 4px 14px rgba(211, 127, 151, 0.10);
+}
+
+/* JSON表示 */
+
+.theme-cute pre {
+  background-color: #ffffff;
+
+  border: 1px solid #f5d7df;
+  border-radius: 18px;
+}
+
+/* 補足文字 */
+
+.theme-cute .task-time,
+.theme-cute .task-note,
+.theme-cute .task-date {
+  color: #a77c88;
+}
