@@ -22,6 +22,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const addUserBtn = document.getElementById('addUserButton');
   if (addUserBtn) addUserBtn.addEventListener('click', insertUsers);
 
+  const loginForm = document.getElementById('loginForm');
+  if (loginForm) loginForm.addEventListener('submit', loginUser);
+
+  const logoutBtn = document.getElementById('logoutButton');
+  if (logoutBtn) logoutBtn.addEventListener('click', logoutUser);
+
   const deleteVtuberBtn = document.getElementById('deleteVtuberButton');
   if (deleteVtuberBtn) deleteVtuberBtn.addEventListener('click', deleteVtuberData);
 
@@ -40,9 +46,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const addFavoriteBtn = document.getElementById('addFavoriteButton');
   if (addFavoriteBtn) addFavoriteBtn.addEventListener('click', insertUserFavorite);
 
+  const token = sessionStorage.getItem('authToken');
+  if (token) {
+    loadPersonalData();
+  } else {
+    setAccountView(null);
+  }
+
   loadTableJson();
   loadLinkJson();
-  loadFavoritesJson();
 });
 
 async function insertUsers(event) {
@@ -81,7 +93,8 @@ async function insertUsers(event) {
     }
 
     const data = await response.json();
-    pre.textContent = `登録しました: ${JSON.stringify(data, null, 2)}`;
+    pre.textContent = `登録しました: ${data.nickname} さん。ログインしてください。`;
+    document.getElementById('userPassword').value = '';
   } catch (error) {
     console.error(error);
     pre.textContent = `エラー: ${error.message}`;
@@ -279,55 +292,146 @@ async function deleteVtuberLinkData(event) {
 async function insertUserFavorite(event) {
   event.preventDefault();
 
-  const pre = document.getElementById('userFavoritesJson');
-  if (!pre) return;
+  const message = document.getElementById('favoriteMessage');
+  if (!message) return;
 
-  const userId = document.getElementById('favoriteUserId').value.trim();
   const vtuberId = document.getElementById('favoriteVtuberId').value.trim();
+  const token = sessionStorage.getItem('authToken');
 
-  if (!userId || !vtuberId) {
-    pre.textContent = 'user_id と vtuber_id を入力してください。';
+  if (!token) {
+    message.textContent = '推しを登録するにはログインしてください。';
     return;
   }
 
-  pre.textContent = '送信中...';
+  if (!vtuberId) {
+    message.textContent = 'favorite vtuber_id を入力してください。';
+    return;
+  }
+
+  message.textContent = '送信中...';
 
   try {
     const response = await fetch(`${API_URL}/favorites`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify({
-        user_id: Number(userId),
         vtuber_id: Number(vtuberId)
       })
     });
 
     if (!response.ok) {
-      const text = await response.text();
-      throw new Error(`登録に失敗しました: ${response.status} ${text}`);
+      const data = await response.json();
+      throw new Error(data.error || `登録に失敗しました: ${response.status}`);
     }
 
-    const data = await response.json();
-    pre.textContent = `登録しました: ${JSON.stringify(data, null, 2)}`;
-    await loadFavoritesJson();
+    message.textContent = '推しを登録しました。';
+    document.getElementById('favoriteVtuberId').value = '';
+    await loadPersonalData();
   } catch (error) {
     console.error(error);
-    pre.textContent = `エラー: ${error.message}`;
+    message.textContent = `エラー: ${error.message}`;
   }
 }
 
-async function loadFavoritesJson() {
-  const pre = document.getElementById('userFavoritesJson');
-  if (!pre) return;
-  pre.textContent = '読み込み中...';
+async function loginUser(event) {
+  event.preventDefault();
+
+  const message = document.getElementById('loginMessage');
+  message.textContent = 'ログイン中...';
 
   try {
-    const response = await fetch(`${API_URL}/favorites`);
+    const response = await fetch(`${API_URL}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: document.getElementById('loginEmail').value.trim(),
+        password: document.getElementById('loginPassword').value
+      })
+    });
     const data = await response.json();
-    pre.textContent = JSON.stringify(data, null, 2);
+    if (!response.ok) {
+      throw new Error(data.error || `ログインに失敗しました: ${response.status}`);
+    }
+
+    sessionStorage.setItem('authToken', data.token);
+    document.getElementById('loginPassword').value = '';
+    await loadPersonalData();
   } catch (error) {
-    pre.textContent = `エラー: ${error.message}`;
+    console.error(error);
+    message.textContent = `エラー: ${error.message}`;
   }
+}
+
+async function loadPersonalData() {
+  const token = sessionStorage.getItem('authToken');
+  if (!token) {
+    setAccountView(null);
+    return;
+  }
+
+  const message = document.getElementById('loginMessage');
+
+  try {
+    const response = await fetch(`${API_URL}/me`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      if (response.status === 401) {
+        sessionStorage.removeItem('authToken');
+        setAccountView(null);
+      }
+      throw new Error(data.error || `ユーザー情報の取得に失敗しました: ${response.status}`);
+    }
+
+    setAccountView(data.user, data.favorites);
+    document.getElementById('loginMessage').textContent = '';
+  } catch (error) {
+    console.error(error);
+    message.textContent = `エラー: ${error.message}`;
+  }
+}
+
+function setAccountView(user, favorites = []) {
+  const registerArea = document.getElementById('registerArea');
+  const loginArea = document.getElementById('loginArea');
+  const myAccount = document.getElementById('myAccount');
+  const favoriteMessage = document.getElementById('favoriteMessage');
+
+  registerArea.hidden = Boolean(user);
+  loginArea.hidden = Boolean(user);
+  myAccount.hidden = !user;
+  favoriteMessage.textContent = user ? '' : '推しの登録にはログインが必要です。';
+
+  if (!user) return;
+
+  document.getElementById('myProfile').textContent =
+    `${user.nickname} さん（${user.email}）`;
+
+  const favoritesList = document.getElementById('myFavorites');
+  favoritesList.replaceChildren();
+  if (favorites.length === 0) {
+    const emptyItem = document.createElement('li');
+    emptyItem.textContent = '推しはまだ登録されていません。';
+    favoritesList.appendChild(emptyItem);
+    return;
+  }
+
+  favorites.forEach((favorite) => {
+    const item = document.createElement('li');
+    const group = favorite.group_name ? `（${favorite.group_name}）` : '';
+    item.textContent = `${favorite.name}${group} [ID: ${favorite.vtuber_id}]`;
+    favoritesList.appendChild(item);
+  });
+}
+
+function logoutUser() {
+  sessionStorage.removeItem('authToken');
+  setAccountView(null);
+  document.getElementById('loginMessage').textContent = 'ログアウトしました。';
+  document.getElementById('loginEmail').value = '';
+  document.getElementById('loginPassword').value = '';
 }

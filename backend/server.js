@@ -1,10 +1,21 @@
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
+const {
+  createHmac,
+  randomBytes,
+  scrypt: scryptCallback,
+  timingSafeEqual
+} = require('crypto');
+const { promisify } = require('util');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+const scrypt = promisify(scryptCallback);
+const tokenSecret = process.env.AUTH_TOKEN_SECRET || randomBytes(32).toString('hex');
+const tokenLifetimeSeconds = 12 * 60 * 60;
 
 const pool = new Pool({
   user: process.env.POSTGRES_USER || 'user',
@@ -16,11 +27,78 @@ const pool = new Pool({
 
 app.get('/health', (req, res) => res.json({ status: 'OK' }));
 
-//users　テーブル設置
-app.get('/api/users', async (req, res) => {
+async function hashPassword(password) {
+  const salt = randomBytes(16).toString('hex');
+  const hash = await scrypt(password, salt, 64);
+  return `scrypt$${salt}$${hash.toString('hex')}`;
+}
+
+async function verifyPassword(password, storedPassword) {
+  const [algorithm, salt, storedHash] = storedPassword.split('$');
+  if (algorithm !== 'scrypt' || !salt || !/^[0-9a-f]{128}$/i.test(storedHash || '')) {
+    const passwordBuffer = Buffer.from(password);
+    const storedBuffer = Buffer.from(storedPassword);
+    return passwordBuffer.length === storedBuffer.length
+      && timingSafeEqual(passwordBuffer, storedBuffer);
+  }
+
+  const hash = await scrypt(password, salt, 64);
+  return timingSafeEqual(hash, Buffer.from(storedHash, 'hex'));
+}
+
+function createAuthToken(userId) {
+  const payload = Buffer.from(JSON.stringify({
+    userId,
+    expiresAt: Math.floor(Date.now() / 1000) + tokenLifetimeSeconds
+  })).toString('base64url');
+  const signature = createHmac('sha256', tokenSecret).update(payload).digest('base64url');
+  return `${payload}.${signature}`;
+}
+
+function requireAuthentication(req, res, next) {
+  const authorization = req.get('Authorization') || '';
+  const match = authorization.match(/^Bearer ([A-Za-z0-9_.-]+)$/);
+  if (!match) {
+    return res.status(401).json({ error: 'ログインしてください' });
+  }
+
+  const [payload, signature] = match[1].split('.');
+  if (!payload || !signature) {
+    return res.status(401).json({ error: 'ログインの有効期限が切れました。再度ログインしてください' });
+  }
+
+  const expectedSignature = createHmac('sha256', tokenSecret).update(payload).digest();
+  let receivedSignature;
+  try {
+    receivedSignature = Buffer.from(signature, 'base64url');
+  } catch (error) {
+    return res.status(401).json({ error: 'ログインの有効期限が切れました。再度ログインしてください' });
+  }
+
+  if (receivedSignature.length !== expectedSignature.length
+    || !timingSafeEqual(receivedSignature, expectedSignature)) {
+    return res.status(401).json({ error: 'ログインの有効期限が切れました。再度ログインしてください' });
+  }
+
+  try {
+    const tokenData = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+    if (!Number.isInteger(tokenData.userId) || tokenData.expiresAt <= Date.now() / 1000) {
+      return res.status(401).json({ error: 'ログインの有効期限が切れました。再度ログインしてください' });
+    }
+    req.userId = tokenData.userId;
+  } catch (error) {
+    return res.status(401).json({ error: 'ログインの有効期限が切れました。再度ログインしてください' });
+  }
+
+  next();
+}
+
+// ログイン中のユーザー情報（認証情報は返さない）
+app.get('/api/users', requireAuthentication, async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT * FROM users'
+      'SELECT user_id, nickname, email FROM users WHERE user_id = $1',
+      [req.userId]
     );
     res.json(result.rows);
   } catch (error) {
@@ -37,14 +115,87 @@ app.post('/api/users', async (req, res) => {
   }
 
   try {
+    const passwordHash = await hashPassword(password);
     const result = await pool.query(
-      'INSERT INTO users (user_id, nickname, email, password) VALUES (DEFAULT, $1, $2, $3) RETURNING user_id, nickname, email, password',
-      [nickname, email, password]
+      'INSERT INTO users (user_id, nickname, email, password) VALUES (DEFAULT, $1, $2, $3) RETURNING user_id, nickname, email',
+      [nickname, email, passwordHash]
     );
     res.json(result.rows[0]);
   } catch (error) {
     console.error(error);
+    if (error.code === '23505') {
+      return res.status(409).json({ error: 'このメールアドレスは既に登録されています' });
+    }
     res.status(500).json({ error: 'Failed to insert user' });
+  }
+});
+
+app.post('/api/login', async (req, res) => {
+  const { email, password } = req.body || {};
+  if (!email || !password) {
+    return res.status(400).json({ error: 'メールアドレスとパスワードを入力してください' });
+  }
+
+  try {
+    const result = await pool.query(
+      'SELECT user_id, nickname, email, password FROM users WHERE email = $1',
+      [email]
+    );
+    const user = result.rows[0];
+    if (!user || !(await verifyPassword(password, user.password))) {
+      return res.status(401).json({ error: 'メールアドレスまたはパスワードが正しくありません' });
+    }
+
+    if (!user.password.startsWith('scrypt$')) {
+      const passwordHash = await hashPassword(password);
+      await pool.query('UPDATE users SET password = $1 WHERE user_id = $2', [passwordHash, user.user_id]);
+    }
+
+    res.json({
+      token: createAuthToken(user.user_id),
+      user: { user_id: user.user_id, nickname: user.nickname, email: user.email }
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'ログインに失敗しました' });
+  }
+});
+
+app.get('/api/me', requireAuthentication, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT users.user_id, users.nickname, users.email,
+              vtubers.vtuber_id, vtubers.name, vtubers.gender,
+              vtubers.group_name, vtubers.birthday, vtubers.color_code, vtubers.notes
+       FROM users
+       LEFT JOIN user_favorites ON user_favorites.user_id = users.user_id
+       LEFT JOIN vtubers ON vtubers.vtuber_id = user_favorites.vtuber_id
+       WHERE users.user_id = $1
+       ORDER BY vtubers.vtuber_id`,
+      [req.userId]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(401).json({ error: 'ユーザーが見つかりません。再度ログインしてください' });
+    }
+
+    const { user_id, nickname, email } = result.rows[0];
+    const favorites = result.rows
+      .filter((row) => row.vtuber_id !== null)
+      .map(({ vtuber_id, name, gender, group_name, birthday, color_code, notes }) => ({
+        vtuber_id,
+        name,
+        gender,
+        group_name,
+        birthday,
+        color_code,
+        notes
+      }));
+
+    res.json({ user: { user_id, nickname, email }, favorites });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'ユーザー情報の取得に失敗しました' });
   }
 });
 
@@ -167,11 +318,17 @@ app.delete('/api/vtuber_links/:id', async (req, res) => {
   }
 });
 
-//推し登録テーブルの一覧取得
-app.get('/api/favorites', async (req, res) => {
+// ログイン中のユーザーの推し一覧
+app.get('/api/favorites', requireAuthentication, async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT * FROM user_favorites'
+      `SELECT vtubers.vtuber_id, vtubers.name, vtubers.gender,
+              vtubers.group_name, vtubers.birthday, vtubers.color_code, vtubers.notes
+       FROM user_favorites
+       JOIN vtubers ON vtubers.vtuber_id = user_favorites.vtuber_id
+       WHERE user_favorites.user_id = $1
+       ORDER BY vtubers.vtuber_id`,
+      [req.userId]
     );
     res.json(result.rows);
   } catch (error) {
@@ -180,17 +337,17 @@ app.get('/api/favorites', async (req, res) => {
   }
 });
 
-// 推し登録テーブルに一件追加 (vtuber_id, user_id)
-app.post('/api/favorites', async (req, res) => {
-  const { vtuber_id, user_id } = req.body || {};
-  if (!vtuber_id || !user_id) {
-    return res.status(400).json({ error: 'vtuber_id と user_id は両方必須です' });
+// ログイン中のユーザーの推しを登録
+app.post('/api/favorites', requireAuthentication, async (req, res) => {
+  const { vtuber_id } = req.body || {};
+  if (!Number.isInteger(vtuber_id) || vtuber_id <= 0) {
+    return res.status(400).json({ error: '有効な vtuber_id を入力してください' });
   }
 
   try {
     const result = await pool.query(
       'INSERT INTO user_favorites (vtuber_id, user_id) VALUES ($1, $2) RETURNING *',
-      [vtuber_id, user_id]
+      [vtuber_id, req.userId]
     );
 
     res.json(result.rows[0]);
@@ -207,4 +364,16 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Backend listening on ${PORT}`));
+async function startServer() {
+  try {
+    await pool.query('ALTER TABLE users ALTER COLUMN password TYPE TEXT');
+  } catch (error) {
+    console.error('Failed to prepare the users table:', error);
+    process.exitCode = 1;
+    return;
+  }
+
+  app.listen(PORT, () => console.log(`Backend listening on ${PORT}`));
+}
+
+startServer();
