@@ -121,7 +121,8 @@ app.post('/api/users', async (req, res) => {
       'INSERT INTO users (user_id, nickname, email, password) VALUES (DEFAULT, $1, $2, $3) RETURNING user_id, nickname, email',
       [nickname, optionalEmail, passwordHash]
     );
-    res.json(result.rows[0]);
+    const user = result.rows[0];
+    res.json({ ...user, token: createAuthToken(user.user_id) });
   } catch (error) {
     console.error(error);
     if (error.code === '23505') {

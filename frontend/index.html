@@ -25,24 +25,6 @@
     <pre id="userJson" style="white-space: pre-wrap; background:#f6f6f6; padding:8px; margin-top:12px;">ユーザー登録の結果を表示</pre>
   </div>
 
-  <section id="loginArea" class="account-area">
-    <h3>ログイン</h3>
-    <form id="loginForm">
-      <input id="loginIdentifier" type="text" placeholder="ニックネーム（またはメールアドレス）" autocomplete="username" required>
-      <input id="loginPassword" type="password" placeholder="パスワード" autocomplete="current-password" required>
-      <button type="submit">ログイン</button>
-    </form>
-    <p id="loginMessage" role="status" aria-live="polite"></p>
-  </section>
-
-  <section id="myAccount" class="account-area" hidden>
-    <h3>マイページ</h3>
-    <p id="myProfile"></p>
-    <h4>あなたの推し</h4>
-    <ul id="myFavorites"></ul>
-    <button id="logoutButton" type="button">ログアウト</button>
-  </section>
-
   <div>
     <button id="showJson">JSON 表示</button>
   </div>
@@ -92,6 +74,7 @@
 
   <div class="user_favorites" style="margin-top:24px; border-top:1px solid #ddd; padding-top:16px;">
     <h3>推し登録</h3>
+    <p>ユーザー登録後に推しを登録できます。</p>
     <input id="favoriteVtuberId" type="number" placeholder="favorite vtuber_id を入力" min="1" />
     <button id="addFavoriteButton" type="button">登録</button>
     <p id="favoriteMessage" role="status" aria-live="polite"></p>
