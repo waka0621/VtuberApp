@@ -18,7 +18,6 @@
   <div id="registerArea" class="user-area" style="width: 100%; background:#f6f6f6; padding:8px;">
     <h3>ユーザー情報</h3>
     <input id="userNickname" type="text" placeholder="nickname (必須)" />
-    <input id="userEmail" type="email" placeholder="email (必須)" />
     <input id="userPassword" type="password" placeholder="password (必須)" />
     <div style="margin-top:8px;">
       <button id="addUserButton" type="button">ユーザー登録</button>
@@ -29,7 +28,7 @@
   <section id="loginArea" class="account-area">
     <h3>ログイン</h3>
     <form id="loginForm">
-      <input id="loginEmail" type="email" placeholder="メールアドレス" autocomplete="username" required>
+      <input id="loginIdentifier" type="text" placeholder="ニックネーム（またはメールアドレス）" autocomplete="username" required>
       <input id="loginPassword" type="password" placeholder="パスワード" autocomplete="current-password" required>
       <button type="submit">ログイン</button>
     </form>

@@ -110,41 +110,56 @@ app.get('/api/users', requireAuthentication, async (req, res) => {
 //users テーブルへ1件追加
 app.post('/api/users', async (req, res) => {
   const { nickname, email, password } = req.body || {};
-  if (!nickname || !email || !password) {
-    return res.status(400).json({ error: 'nickname, email, password はすべて必須です' });
+  if (!nickname || !password) {
+    return res.status(400).json({ error: 'nickname と password は必須です' });
   }
 
   try {
+    const optionalEmail = email || null;
     const passwordHash = await hashPassword(password);
     const result = await pool.query(
       'INSERT INTO users (user_id, nickname, email, password) VALUES (DEFAULT, $1, $2, $3) RETURNING user_id, nickname, email',
-      [nickname, email, passwordHash]
+      [nickname, optionalEmail, passwordHash]
     );
     res.json(result.rows[0]);
   } catch (error) {
     console.error(error);
     if (error.code === '23505') {
-      return res.status(409).json({ error: 'このメールアドレスは既に登録されています' });
+      return res.status(409).json({
+        error: error.constraint && error.constraint.includes('nickname')
+          ? 'このニックネームは既に登録されています'
+          : 'このメールアドレスは既に登録されています'
+      });
     }
     res.status(500).json({ error: 'Failed to insert user' });
   }
 });
 
 app.post('/api/login', async (req, res) => {
-  const { email, password } = req.body || {};
-  if (!email || !password) {
-    return res.status(400).json({ error: 'メールアドレスとパスワードを入力してください' });
+  const { identifier, email, password } = req.body || {};
+  const loginIdentifier = identifier || email;
+  if (!loginIdentifier || !password) {
+    return res.status(400).json({ error: 'ニックネーム（またはメールアドレス）とパスワードを入力してください' });
   }
 
   try {
     const result = await pool.query(
-      'SELECT user_id, nickname, email, password FROM users WHERE email = $1',
-      [email]
+      'SELECT user_id, nickname, email, password FROM users WHERE nickname = $1 OR email = $1',
+      [loginIdentifier]
     );
-    const user = result.rows[0];
-    if (!user || !(await verifyPassword(password, user.password))) {
-      return res.status(401).json({ error: 'メールアドレスまたはパスワードが正しくありません' });
+    const matchingUsers = [];
+    for (const candidate of result.rows) {
+      if (await verifyPassword(password, candidate.password)) {
+        matchingUsers.push(candidate);
+      }
     }
+    if (matchingUsers.length === 0) {
+      return res.status(401).json({ error: 'ニックネーム（またはメールアドレス）またはパスワードが正しくありません' });
+    }
+    if (matchingUsers.length > 1) {
+      return res.status(409).json({ error: 'ログイン情報が重複しています。ニックネームを変更してください' });
+    }
+    const user = matchingUsers[0];
 
     if (!user.password.startsWith('scrypt$')) {
       const passwordHash = await hashPassword(password);
@@ -367,8 +382,10 @@ const PORT = process.env.PORT || 5000;
 async function startServer() {
   try {
     await pool.query('ALTER TABLE users ALTER COLUMN password TYPE TEXT');
+    await pool.query('ALTER TABLE users ALTER COLUMN email DROP NOT NULL');
+    await pool.query('CREATE UNIQUE INDEX IF NOT EXISTS users_nickname_unique_idx ON users (nickname)');
   } catch (error) {
-    console.error('Failed to prepare the users table:', error);
+    console.error('Failed to prepare the users table. Check for duplicate nicknames:', error);
     process.exitCode = 1;
     return;
   }

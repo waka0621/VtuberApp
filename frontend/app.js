@@ -64,11 +64,10 @@ async function insertUsers(event) {
   if (!pre) return;
 
   const nickname = document.getElementById('userNickname').value.trim();
-  const email = document.getElementById('userEmail').value.trim();
   const password = document.getElementById('userPassword').value;
 
-  if (!nickname || !email || !password) {
-    pre.textContent = 'nickname, email, password を入力してください。';
+  if (!nickname || !password) {
+    pre.textContent = 'nickname と password を入力してください。';
     return;
   }
 
@@ -82,7 +81,6 @@ async function insertUsers(event) {
       },
       body: JSON.stringify({
         nickname,
-        email,
         password
       })
     });
@@ -347,7 +345,7 @@ async function loginUser(event) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        email: document.getElementById('loginEmail').value.trim(),
+        identifier: document.getElementById('loginIdentifier').value.trim(),
         password: document.getElementById('loginPassword').value
       })
     });
@@ -409,7 +407,7 @@ function setAccountView(user, favorites = []) {
   if (!user) return;
 
   document.getElementById('myProfile').textContent =
-    `${user.nickname} さん（${user.email}）`;
+    user.email ? `${user.nickname} さん（${user.email}）` : `${user.nickname} さん`;
 
   const favoritesList = document.getElementById('myFavorites');
   favoritesList.replaceChildren();
@@ -432,6 +430,6 @@ function logoutUser() {
   sessionStorage.removeItem('authToken');
   setAccountView(null);
   document.getElementById('loginMessage').textContent = 'ログアウトしました。';
-  document.getElementById('loginEmail').value = '';
+  document.getElementById('loginIdentifier').value = '';
   document.getElementById('loginPassword').value = '';
 }
