@@ -25,6 +25,24 @@
     <pre id="userJson" style="white-space: pre-wrap; background:#f6f6f6; padding:8px; margin-top:12px;">ユーザー登録の結果を表示</pre>
   </div>
 
+　<section id="loginArea" class="accout-area">
+    <h3>ログイン</h3>
+    <form id="loginForm">
+      <input id="loginNickname" type="text" placeholder="Nickname" required>
+      <input id="loginPassword" type="password" placeholder="password" required>
+    <button type="submit">ログイン</button>
+    </form>
+    <p id="loginMessage" role="status" aria-live="polite"></p>
+  </section>
+
+    <section id="myAccount" class="account-area" hidden>
+    <h3>マイページ</h3>
+    <p id="myProfile"></p>
+    <h4>あなたの推し</h4>
+    <ul id="myFavorites"></ul>
+    <button type="button">ログアウト</button>
+  </section>
+
   <div>
     <button id="showJson">JSON 表示</button>
   </div>
