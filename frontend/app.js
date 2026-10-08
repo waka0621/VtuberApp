@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:5000/api';
+const API_URL = (window.APP_CONFIG && window.APP_CONFIG.API_URL) || 'http://localhost:5000/api';
 
 document.addEventListener('DOMContentLoaded', () => {
   const themeButtons = document.querySelectorAll('[data-theme]');

@@ -1,0 +1,32 @@
+databases:
+  - name: vtuber-db
+    plan: free
+    region: singapore
+    databaseName: vtuber
+    user: vtuber
+    ipAllowList: []
+
+services:
+  - type: web
+    name: vtuber-backend
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: vtuber-db
+          property: connectionString
+      - key: AUTH_TOKEN_SECRET
+        generateValue: true
+      - key: CORS_ORIGIN
+        sync: false
+
+  - type: web
+    name: vtuber-frontend
+    runtime: static
+    buildCommand: echo "no build"
+    staticPublishPath: ./frontend

@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
+const fs = require('fs');
+const path = require('path');
 const {
   createHmac,
   randomBytes,
@@ -10,20 +12,28 @@ const {
 const { promisify } = require('util');
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(',').map((origin) => origin.trim()).filter(Boolean)
+    : true
+}));
 app.use(express.json());
 
 const scrypt = promisify(scryptCallback);
 const tokenSecret = process.env.AUTH_TOKEN_SECRET || randomBytes(32).toString('hex');
 const tokenLifetimeSeconds = 12 * 60 * 60;
 
-const pool = new Pool({
-  user: process.env.POSTGRES_USER || 'user',
-  password: process.env.POSTGRES_PASSWORD || 'password',
-  host: process.env.POSTGRES_HOST || 'db',
-  port: process.env.POSTGRES_PORT || 5432,
-  database: process.env.POSTGRES_DB || 'task_db'
-});
+const pool = new Pool(
+  process.env.DATABASE_URL
+    ? { connectionString: process.env.DATABASE_URL }
+    : {
+        user: process.env.POSTGRES_USER || 'user',
+        password: process.env.POSTGRES_PASSWORD || 'password',
+        host: process.env.POSTGRES_HOST || 'db',
+        port: process.env.POSTGRES_PORT || 5432,
+        database: process.env.POSTGRES_DB || 'task_db'
+      }
+);
 
 app.get('/health', (req, res) => res.json({ status: 'OK' }));
 
@@ -382,6 +392,7 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 async function startServer() {
   try {
+    await pool.query(fs.readFileSync(path.join(__dirname, 'init.sql'), 'utf8'));
     await pool.query('ALTER TABLE users ALTER COLUMN password TYPE TEXT');
     await pool.query('ALTER TABLE users ALTER COLUMN email DROP NOT NULL');
     await pool.query('CREATE UNIQUE INDEX IF NOT EXISTS users_nickname_unique_idx ON users (nickname)');
