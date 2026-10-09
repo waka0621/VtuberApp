@@ -122,7 +122,7 @@ button {
   border: none;
   border-radius: 8px;
 
-  background-color: #414243;
+  background-color: #78797a;
   color: #ffffff;
 
   font-family: inherit;
@@ -299,7 +299,7 @@ body.theme-cool {
 }
 
 .theme-cool h2 {
-  color: #79c0ff;
+  color: #3c5c76;
 }
 
 /* 入力欄 */
