@@ -22,6 +22,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const addUserBtn = document.getElementById('addUserButton');
   if (addUserBtn) addUserBtn.addEventListener('click', insertUsers);
 
+  const loginForm = document.getElementById('loginForm');
+  if (loginForm) loginForm.addEventListener('submit', loginUser);
+
+  const logoutButton = document.getElementById('logoutButton');
+  if (logoutButton) logoutButton.addEventListener('click', logoutUser);
+
   const deleteVtuberBtn = document.getElementById('deleteVtuberButton');
   if (deleteVtuberBtn) deleteVtuberBtn.addEventListener('click', deleteVtuberData);
 
@@ -45,9 +51,122 @@ document.addEventListener('DOMContentLoaded', () => {
       ? 'ユーザー登録済みです。推しを登録できます。'
       : '推しを登録するには、先にユーザー登録してください。';
 
+  restoreSession();
   loadTableJson();
   loadLinkJson();
 });
+
+async function loginUser(event) {
+  event.preventDefault();
+
+  const message = document.getElementById('loginMessage');
+  const nickname = document.getElementById('loginNickname').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  message.textContent = 'ログイン中...';
+
+  try {
+    const response = await fetch(`${API_URL}/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ identifier: nickname, password })
+    });
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || `ログインに失敗しました: ${response.status}`);
+    }
+
+    sessionStorage.setItem('authToken', data.token);
+    document.getElementById('loginPassword').value = '';
+    await loadMyPage();
+  } catch (error) {
+    console.error(error);
+    message.textContent = `エラー: ${error.message}`;
+  }
+}
+
+async function restoreSession() {
+  if (!sessionStorage.getItem('authToken')) return;
+
+  try {
+    await loadMyPage();
+  } catch (error) {
+    console.error(error);
+    document.getElementById('loginMessage').textContent =
+      `マイページを読み込めませんでした: ${error.message}`;
+  }
+}
+
+async function loadMyPage() {
+  const token = sessionStorage.getItem('authToken');
+  if (!token) return;
+
+  const response = await fetch(`${API_URL}/me`, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+  const data = await response.json();
+
+  if (response.status === 401) {
+    sessionStorage.removeItem('authToken');
+    document.getElementById('myAccount').hidden = true;
+    document.getElementById('loginArea').hidden = false;
+    document.getElementById('registerArea').hidden = false;
+    document.getElementById('loginMessage').textContent =
+      data.error || 'ログインの有効期限が切れました。再度ログインしてください。';
+    throw new Error(data.error || 'ログインの有効期限が切れました。');
+  }
+  if (!response.ok) {
+    throw new Error(data.error || `マイページの読み込みに失敗しました: ${response.status}`);
+  }
+
+  document.getElementById('myProfile').textContent = `${data.user.nickname} さん`;
+  const favoritesList = document.getElementById('myFavorites');
+  favoritesList.replaceChildren();
+
+  if (data.favorites.length === 0) {
+    const emptyMessage = document.createElement('li');
+    emptyMessage.textContent = 'まだ推しが登録されていません。';
+    favoritesList.appendChild(emptyMessage);
+  } else {
+    data.favorites.forEach((favorite) => {
+      const item = document.createElement('li');
+      item.className = 'favorite-item';
+      const name = document.createElement('strong');
+      name.textContent = favorite.name;
+      item.appendChild(name);
+
+      const details = [favorite.group_name, favorite.gender].filter(Boolean);
+      if (details.length > 0) {
+        const description = document.createElement('span');
+        description.textContent = details.join(' ・ ');
+        item.appendChild(description);
+      }
+      favoritesList.appendChild(item);
+    });
+  }
+
+  document.getElementById('registerArea').hidden = true;
+  document.getElementById('loginArea').hidden = true;
+  document.getElementById('myAccount').hidden = false;
+  document.getElementById('favoriteMessage').textContent =
+    'ユーザー登録済みです。推しを登録できます。';
+}
+
+function logoutUser() {
+  sessionStorage.removeItem('authToken');
+  document.getElementById('myAccount').hidden = true;
+  document.getElementById('loginArea').hidden = false;
+  document.getElementById('registerArea').hidden = false;
+  document.getElementById('myFavorites').replaceChildren();
+  document.getElementById('myProfile').textContent = '';
+  document.getElementById('loginMessage').textContent = 'ログアウトしました。';
+  document.getElementById('favoriteMessage').textContent =
+    '推しを登録するには、先にログインしてください。';
+}
 
 async function insertUsers(event) {
   event.preventDefault();
@@ -88,6 +207,7 @@ async function insertUsers(event) {
     document.getElementById('favoriteMessage').textContent =
       'ユーザー登録済みです。推しを登録できます。';
     document.getElementById('userPassword').value = '';
+    await loadMyPage();
   } catch (error) {
     console.error(error);
     pre.textContent = `エラー: ${error.message}`;
@@ -327,6 +447,7 @@ async function insertUserFavorite(event) {
 
     message.textContent = '推しを登録しました。';
     document.getElementById('favoriteVtuberId').value = '';
+    await loadMyPage();
   } catch (error) {
     console.error(error);
     message.textContent = `エラー: ${error.message}`;

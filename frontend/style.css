@@ -45,8 +45,25 @@ body {
 }
 
 #myFavorites {
-  padding-left: 24px;
-  line-height: 1.8;
+  display: grid;
+  gap: 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.favorite-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 16px;
+  border: 1px solid #d8dde3;
+  border-radius: 10px;
+  background-color: rgba(255, 255, 255, 0.75);
+}
+
+.favorite-item span {
+  font-size: 14px;
+  opacity: 0.8;
 }
 
 /*simpleテーマ*/
